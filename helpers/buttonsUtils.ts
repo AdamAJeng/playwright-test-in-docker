@@ -38,18 +38,13 @@ export async function clickDynamicButtonRepeatedly(
   page: Page,
   pattern: RegExp,
   count = 1,
-  withinLocator?: Locator
+  scope?: Locator
 ) {
-  for (let i = 0; i < count; i++) {
-    let button: Locator;
+  const getButton = () =>
+    (scope ?? page).getByRole('button', { name: pattern }).first();
 
-    if (withinLocator) {
-      button = withinLocator.getByRole('button', { name: pattern });
-    } else {
-      button = page.getByRole('button', { name: pattern });
-    }
-
-    await button.first().click();
-    await page.waitForTimeout(2000);
+  for (const _ of Array.from({ length: count })) {
+    await getButton().click();
+    // await page.waitForTimeout(1000);
   }
 }

@@ -1,95 +1,54 @@
-import { test, expect } from '@playwright/test';
-import { goToUrlAndVerify, clickButtonByLabel, expectAccordionExpanded } from '../helpers';
+import { test } from '@playwright/test';
+import { KontrollrummetPage } from '../../pages/KontrollrummetPage';
+import { Country } from '../../enums/Country';
+import { CountryCode } from '../../enums/CountryCode';
 
-test('Kontrollrummet: Accordian Functionality on Index Page', async ({ page, context }) => {
-  const readyLocator = 'li:has-text("Visar priser för:")';
-  const cookiesButton = page.getByText(/Acceptera alla kakor/i );
-  const energyFlowSweden = page.getByRole('button', { name: /Sverige.*(Exporterar|Importerar)/ });
-  const energyFlowDenmark = page.getByRole('button', { name: /Danmark.*(Exporterar|Importerar)/ });
-  const energyFlowNorway = page.getByRole('button', { name: /Norge.*(Exporterar|Importerar)/ });
-  const energyFlowFinland = page.getByRole('button', { name: /Finland.*(Exporterar|Importerar)/ });
-  const energyFlowEstonia = page.getByRole('button', { name: /Estland.*(Exporterar|Importerar)/ });
-  const energyFlowLatvia = page.getByRole('button', { name: /Lettland.*(Exporterar|Importerar)/ });
-  const energyFlowLithuania = page.getByRole('button', { name: /Litauen.*(Exporterar|Importerar)/ });
-  const label1 = 'Bra att veta om data på sidan';
-  const label2 = 'Om elmarknaden';
-  const label3 = 'Om balansering';
+test.describe('Kontrollrummet Index Page', () => {
+  let kontrollrummet: KontrollrummetPage;
 
-  await goToUrlAndVerify(page, 'https://www.svk.se/om-kraftsystemet/kontrollrummet/', 
-    {
-      readyLocator: readyLocator
+  test.beforeEach(async ({ page, context }) => {
+    kontrollrummet = new KontrollrummetPage(page);
+    await context.clearCookies();
+    await kontrollrummet.goto();
+    await kontrollrummet.acceptCookies();
+  });
+
+  test('Accordion functionality shows and hides correct content', async () => {
+    const pageInfo = kontrollrummet.accordion('Bra att veta om data på sidan');
+    await pageInfo.expectTextVisible(/^Vanliga frågor om kontrollrummet$/, true);
+    await pageInfo.toggle();
+    await pageInfo.expectTextVisible(/^Vanliga frågor om kontrollrummet$/, false);
+    await pageInfo.toggle();
+
+    const powerMarket = kontrollrummet.accordion('Om elmarknaden');
+    await powerMarket.expectTextVisible(/^Läs mer om elmarknaden$/, false);
+    await powerMarket.toggle();
+    await powerMarket.expectTextVisible(/^Läs mer om elmarknaden$/, true);
+    await powerMarket.toggle();
+
+    const balancing = kontrollrummet.accordion('Om balansering');
+    await balancing.expectTextVisible(/^Läs mer om balansering$/, false);
+    await balancing.toggle();
+    await balancing.expectTextVisible(/^Läs mer om balansering$/, true);
+    await balancing.toggle();
+  });
+
+  test('Energy flow buttons show expected area codes', async () => {
+    const testCases = [
+      { country: Country.Sweden, code: CountryCode.SE, expectedAreas: ['SE1', 'SE2', 'SE3', 'SE4'] },
+      { country: Country.Denmark, code: CountryCode.DK, expectedAreas: ['DK1', 'DK2'] },
+      { country: Country.Norway, code: CountryCode.NO, expectedAreas: ['NO1', 'NO2', 'NO3', 'NO4', 'NO5'] },
+      { country: Country.Finland, code: CountryCode.FI, expectedAreas: ['FI'] },
+      { country: Country.Estonia, code: CountryCode.EE, expectedAreas: ['EE'] },
+      { country: Country.Latvia, code: CountryCode.LV, expectedAreas: ['LV'] },
+      { country: Country.Lithuania, code: CountryCode.LT, expectedAreas: ['LT'] },
+    ];
+
+    for (const { country, code, expectedAreas } of testCases) {
+      await test.step(`Verify energy zone(s) for ${country}`, async () => {
+        await kontrollrummet.clickEnergyFlow(country);
+        await kontrollrummet.expectAreaCodes(code, expectedAreas);
+      });
     }
-  );
-
-  await context.clearCookies(); // Clear all cookies
-
-  await cookiesButton.isVisible();
-  await cookiesButton.click();
-  await expect(cookiesButton).not.toBeVisible();
-
-  //─────── Toggle "Bra att veta om data på sidan" ────────────//
-
-  await page.getByText(label1).click();
-  await expectAccordionExpanded(page, label1, false);
-  
-  await expect(page.getByText(/Vanliga frågor om kontrollrummet/i)).toBeHidden({ timeout: 10000 });
-  
-  await page.getByText(label1).click();
-  await expectAccordionExpanded(page, label1, true);
-  
-  //─────── Toggle "Om elmarknaden" ────────────//
-  await clickButtonByLabel(page,label2);
-  await expectAccordionExpanded(page, label2, true);
-  
-  await expect(page.getByText(/Läs mer om elmarknaden/i)).toBeVisible({ timeout: 10000 });
-  
-  await clickButtonByLabel(page,label2);
-  await expectAccordionExpanded(page, label2, false);
-  
-  //─────── Toggle "Om balansering" ────────────//
-  await page.getByText(label3, { exact: true }).click();
-  await expectAccordionExpanded(page, label3, true);
-  
-  await expect(page.getByText(/Läs mer om balansering/i)).toBeVisible({ timeout: 10000 });
-  
-  await page.getByText(label3, { exact: true }).click();
-  await expectAccordionExpanded(page, label3, false);
-  
-  //─────── EL: Import/Export ───────//
-  // Sweden
-  await expect(energyFlowSweden).toBeVisible();
-  await energyFlowSweden.click();
-  await expect(page.locator('#electrical-areas-SE td')).toContainText(['SE1', 'SE2', 'SE3', 'SE4']);
-  
-  //await page.waitForTimeout(4000);
-  
-  // Denmark
-  await expect(energyFlowDenmark).toBeVisible();
-  await energyFlowDenmark.click();
-  await expect(page.locator('#electrical-areas-DK td')).toContainText(['DK1', 'DK2']);
-  
-  // Norway
-  await expect(energyFlowNorway).toBeVisible();
-  await energyFlowNorway.click();
-  await expect(page.locator('#electrical-areas-NO td')).toContainText(['NO1', 'NO2', 'NO3','NO4','NO5']);
-  
-  // Finland
-  await expect(energyFlowFinland).toBeVisible();
-  await energyFlowFinland.click();
-  await expect(page.locator('#electrical-areas-FI td')).toContainText(['FI']);
-  
-  // Estonia
-  await expect(energyFlowEstonia).toBeVisible();
-  await energyFlowEstonia.click();
-  await expect(page.locator('#electrical-areas-EE td')).toContainText(['EE']);
-  
-  // Latvia
-  await expect(energyFlowLatvia).toBeVisible();
-  await energyFlowLatvia.click();
-  await expect(page.locator('#electrical-areas-LV td')).toContainText(['LV']);
-  
-  // Lithuania
-  await expect(energyFlowLithuania).toBeVisible();
-  await energyFlowLithuania.click();
-  await expect(page.locator('#electrical-areas-LT td')).toContainText(['LT']);
-}); 
+  });
+});

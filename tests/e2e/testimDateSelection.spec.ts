@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { goToUrlAndVerify, openDatePickerByLabel, clickReadOnlyInputByValue, clickListItemByText, getDateRangePlusDays } from '../helpers';
+import { goToUrlAndVerify, openDatePickerByLabel, clickReadOnlyInputByValue, clickListItemByText, getDateRangePlusDays } from '../../helpers';
 
 test('Testim: Select Travel Date', async ({ page }) => {
   const { formattedStartDate, formattedEndDate } = getDateRangePlusDays('2025-05-15', 10);

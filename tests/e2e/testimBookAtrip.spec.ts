@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { goToUrlAndVerify, clickButtonByLabel, fillFieldByLabel } from '../helpers';
+import { goToUrlAndVerify, clickButtonByLabel, fillFieldByLabel } from '../../helpers';
 
 test('Testim: Book A Trip', async ({ page }) => {
   const readyLocator = 'span:has-text("Back to top")';

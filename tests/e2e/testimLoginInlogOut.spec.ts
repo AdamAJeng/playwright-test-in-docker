@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { goToUrlAndVerify, fillFieldByLabel } from '../helpers';
+import { goToUrlAndVerify, fillFieldByLabel } from '../../helpers';
 
 test('Testim: Login and Logout', async ({ page }) => {
   const readyLocator = 'span:has-text("Back to top")';

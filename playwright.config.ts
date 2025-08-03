@@ -27,13 +27,14 @@ export default defineConfig({
   ? [['html'], ['list']] // CI reporters
   : [['html', { open: 'always' }], ['list']], // Local reporters
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  timeout: 30 * 1000, // 30 seconds timeout for each test
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     // baseURL: 'http://localhost:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    headless: true
+    headless: false
   },
 
   /* Configure projects for major browsers */
@@ -52,7 +53,7 @@ export default defineConfig({
       use: { 
         ...devices['Desktop Chrome'],
         channel: 'chrome',
-        viewport: { width: 2560, height: 1440 }
+        //viewport: { width: 2560, height: 1440 }
       },
     },
     {
